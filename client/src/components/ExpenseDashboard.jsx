@@ -9,7 +9,7 @@ import StatsGrid from "./dashboard/StatsGrid";
 import ChartsSection from './dashboard/ChartsSection';
 import GroupSection from "./groups/GroupSection";
 import CreateGroupModal from "./groups/CreateGroupModal";
-import GroupDetailModal from './groups/GroupDetailModal';
+import GroupDetailModal from "./dashboard/GroupDetailModal";
 import { toast } from "react-toastify";
 import { AuthContext } from "../context/AuthContext";
 
