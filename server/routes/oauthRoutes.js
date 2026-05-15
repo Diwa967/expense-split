@@ -1,33 +1,36 @@
 import express from "express";
 import passport from "passport";
-import {
-  googleAuth,
-  googleCallback,
-  oauthLogout,
-} from "../controllers/oauthController.js";
+import { googleCallback, oauthLogout } from "../controllers/oauthController.js";
 
 const router = express.Router();
 
-// ✅ Route to start Google OAuth flow
+/**
+ * 🚀 START GOOGLE LOGIN
+ */
 router.get(
   "/google",
   passport.authenticate("google", {
     scope: ["profile", "email"],
-    session: false, // We handle sessions via JWT, not Passport
-  }),
+    session: false,
+  })
 );
 
-// ✅ Route to handle Google OAuth callback
+/**
+ * 🚀 GOOGLE CALLBACK (IMPORTANT)
+ * MUST MATCH GOOGLE CLOUD EXACTLY
+ */
 router.get(
   "/google/callback",
   passport.authenticate("google", {
     session: false,
-    failureRedirect: "/oauth/failed",
+    failureRedirect: `${process.env.FRONTEND_URL}/login`,
   }),
-  googleCallback,
+  googleCallback
 );
 
-// ✅ Route for OAuth failure (optional fallback)
+/**
+ * ❌ FAILURE ROUTE
+ */
 router.get("/failed", (req, res) => {
   res.status(401).json({
     success: false,
@@ -35,7 +38,9 @@ router.get("/failed", (req, res) => {
   });
 });
 
-// ✅ Route to logout OAuth user (clears JWT cookie)
+/**
+ * 🚪 LOGOUT
+ */
 router.get("/logout", oauthLogout);
 
 export default router;
