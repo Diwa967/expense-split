@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import Sidebar from "../components/Layout/Sidebar";
+import Sidebar from "../components/layout/Sidebar";
 import {
   FaUser,
   FaCamera,
