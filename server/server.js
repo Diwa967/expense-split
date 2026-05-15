@@ -31,7 +31,7 @@ app.use(cookieParser());
 // CORS config
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:5173"],
+    origin: ["http://localhost:3000", "http://localhost:5173", "https://expensesplit-nine.vercel.app"],
     credentials: true,
   }),
 );

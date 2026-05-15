@@ -62,6 +62,6 @@ const getFrontendUrl = () => {
     process.env.FRONTEND_URL ||
     (process.env.NODE_ENV === "production"
       ? "https://yourapp.com"
-      : "http://localhost:5173")
+      : "https://expensesplit-nine.vercel.app")
   );
 };

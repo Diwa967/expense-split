@@ -406,7 +406,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, currentUserId }) => {
                   formDataImage.append("image", blob, "receipt.jpg");
 
                   const scanRes = await fetch(
-                    "http://localhost:5000/api/gemini/scan-receipt",
+                    "https://expense-split-nlrm.onrender.com/api/gemini/scan-receipt",
                     {
                       method: "POST",
                       body: formDataImage,
