@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useCallback, useContext } from "react";
 import api from "../api/api";
 
-import Sidebar from "./Layout/Sidebar";
+import Sidebar from './layout/Sidebar';
+
 import HeaderTop from "./layout/HeaderTop";
-import StatsGrid from "./Dashboard/StatsGrid";
-import ChartsSection from "./Dashboard/ChartsSection";
+import StatsGrid from "./dashboard/StatsGrid";
+
+import ChartsSection from './dashboard/ChartsSection';
 import GroupSection from "./groups/GroupSection";
 import CreateGroupModal from "./groups/CreateGroupModal";
-import GroupDetailModal from "./Dashboard/GroupDetailModal";
+import GroupDetailModal from './groups/GroupDetailModal';
+import { toast } from "react-toastify";
 import { AuthContext } from "../context/AuthContext";
 
 const ExpenseDashboard = () => {
