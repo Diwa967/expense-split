@@ -10,7 +10,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import EmailVerify from "./Emailverify.jsx";
-import ResetPassword from "./Resetpassword.jsx";
+import ResetPassword from "./ResetPassword.jsx";
 
 // Pages
 import Home from "./pages/Home";
