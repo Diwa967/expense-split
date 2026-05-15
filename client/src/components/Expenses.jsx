@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Sidebar from "./Layout/Sidebar";
+import Sidebar from "./layout/Sidebar";
 
 import HeaderTop from "./layout/HeaderTop";
 import ExpenseCard from "./expenses/ExpenseCard";
