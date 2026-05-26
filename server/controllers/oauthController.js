@@ -82,8 +82,6 @@ export const oauthLogout = (req, res) => {
 const getFrontendUrl = () => {
   return (
     process.env.FRONTEND_URL ||
-    (process.env.NODE_ENV === "production"
-      ? "https://expensesplit-nine.vercel.app"
-      : "http://localhost:3000")
+    "https://expensesplit-nine.vercel.app"
   );
 };
