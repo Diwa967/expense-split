@@ -4,7 +4,6 @@ dotenv.config();
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import session from "express-session";
 import passport from "./config/passport.js";
 import connectDB from "./config/db.js";
 import { protect } from "./middleware/authMiddleware.js";
@@ -19,51 +18,53 @@ import expenseRoutes from "./routes/expenseRoutes.js";
 import groupRoutes from "./routes/groupRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
-import geminiRoutes from './routes/gemini.js'
+import geminiRoutes from './routes/gemini.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Connect Database
+connectDB();
+
+// ==========================================
+// MIDDLEWARE CONFIGURATION
+// ==========================================
 app.use(express.json());
 app.use(cookieParser());
 
-// CORS config
+// Trust Reverse Proxy (Crucial for Render HTTPS cookie forwarding)
+app.set("trust proxy", 1);
+
+// CORS Config (Supports both Local Development & Vercel Production)
+const allowedOrigins = [
+  "https://expensesplit-nine.vercel.app",
+  "http://localhost:3000",
+  "http://localhost:5173" // Vite default local port
+];
+
 app.use(
   cors({
-    origin: "https://expensesplit-nine.vercel.app",
+    origin: function (origin, callback) {
+      // Allow server-to-server or tools like Postman (no origin)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg = `The CORS policy for this site does not allow access from origin: ${origin}`;
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   })
 );
 
-
-app.set("trust proxy", 1);
-
-
-// Session config (required by Passport)
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "default_secret_change_me",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    },
-  }),
-);
-
-// Passport middleware
+// Initialize Passport (Session tracking entirely removed for smooth standalone JWT execution)
 app.use(passport.initialize());
-app.use(passport.session());
 
-// Connect Database
-connectDB();
-
-app.use("/api/auth", authRoutes); // Traditional: /api/auth/login, /register, etc.
-app.use("/api/oauth", oauthRoutes);
+// ==========================================
+// ROUTE REGISTRATION
+// ==========================================
+app.use("/api/auth", authRoutes);
+app.use("/api/oauth", oauthRoutes); // Handles /api/oauth/google and /api/oauth/google/callback
 app.use("/api/auth/users", userRoutes);
 app.use("/api/auth/groups", groupRoutes);
 app.use("/api/auth/expenses", expenseRoutes);
@@ -71,9 +72,13 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/uploadthing", createRouteHandler({ router: uploadRouter }));
 app.use("/api/gemini", geminiRoutes);
 
+/**
+ * 👤 CURRENT USER PROFILE ENDPOINT
+ * Fetches user profile data securely extracted via the protect middleware
+ */
 app.get("/api/auth/me", protect, async (req, res) => {
   try {
-    // Fetch user from DB, exclude password field
+    // Fetch user from DB using req.userId injected by 'protect' middleware
     const user = await User.findById(req.userId).select("-password");
 
     if (!user) {
@@ -105,34 +110,32 @@ app.get("/api/auth/me", protect, async (req, res) => {
   }
 });
 
-// Test Route
+// Base Test Route
 app.get("/", (req, res) => {
-  res.send("API is running...");
+  res.send("API is running smoothly...");
+});
+
+// Environment Variable Debug Route
+app.get("/api/debug/env", (req, res) => {
+  res.json({
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? "✓ Set" : "✗ MISSING",
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? "✓ Set" : "✗ MISSING",
+    CALLBACK_URL: process.env.CALLBACK_URL,
+    FRONTEND_URL: process.env.FRONTEND_URL,
+    NODE_ENV: process.env.NODE_ENV,
+  });
 });
 
 // Global Error Handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error("Global Catch Error:", err.stack);
   res.status(500).json({
     success: false,
     message: "Internal Server Error",
   });
 });
 
-app.get("/api/debug/env", (req, res) => {
-  res.json({
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? "✓ Set" : "✗ MISSING",
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET
-      ? "✓ Set"
-      : "✗ MISSING",
-    CALLBACK_URL: process.env.CALLBACK_URL,
-    SESSION_SECRET: process.env.SESSION_SECRET ? "✓ Set" : "✗ MISSING",
-    FRONTEND_URL: process.env.FRONTEND_URL,
-    NODE_ENV: process.env.NODE_ENV,
-  });
-});
-
 // Start Server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });
