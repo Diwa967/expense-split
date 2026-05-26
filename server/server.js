@@ -31,9 +31,9 @@ app.use(cookieParser());
 // CORS config
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:5173", "https://expensesplit-nine.vercel.app"],
+    origin: "https://expensesplit-nine.vercel.app",
     credentials: true,
-  }),
+  })
 );
 
 // Session config (required by Passport)
