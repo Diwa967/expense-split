@@ -36,6 +36,10 @@ app.use(
   })
 );
 
+
+app.set("trust proxy", 1);
+
+
 // Session config (required by Passport)
 app.use(
   session({
