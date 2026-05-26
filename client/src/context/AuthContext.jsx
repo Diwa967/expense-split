@@ -6,6 +6,7 @@
 
 // export const AuthContext = createContext();
 
+
 // export const AuthProvider = ({ children }) => {
 //   const [user, setUser] = useState(null);
 //   const [loading, setLoading] = useState(true);
@@ -133,7 +134,13 @@
 // };
 
 
-import React, { createContext, useState, useEffect } from "react";
+
+import React, {
+  createContext,
+  useState,
+  useEffect,
+} from "react";
+
 import api from "../api/api";
 import { useNavigate } from "react-router-dom";
 
@@ -143,17 +150,14 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const navigate = useNavigate();
 
-  // ✅ Check auth state on app load (FIXED FOR COOKIE AUTH)
+  // ✅ Check auth on app load
   useEffect(() => {
-    console.log("CHECKING AUTH...");
-
     const initAuth = async () => {
       try {
-        const res = await api.get("/api/auth/me", {
-          withCredentials: true, // 🔥 REQUIRED FOR COOKIE
-        });
+        const res = await api.get("/api/auth/is-auth");
 
         if (res.data.success) {
           setUser(res.data.user);
@@ -161,6 +165,7 @@ export const AuthProvider = ({ children }) => {
           setUser(null);
         }
       } catch (err) {
+        console.log(err);
         setUser(null);
       } finally {
         setLoading(false);
@@ -170,7 +175,7 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  // ✅ Login (UNCHANGED - but NOTE: this is manual login only)
+  // ✅ Login
   const login = async (email, password) => {
     try {
       setError(null);
@@ -180,24 +185,26 @@ export const AuthProvider = ({ children }) => {
         password,
       });
 
-      const { token, user } = res.data;
+      const { user } = res.data;
 
-      // ⚠️ KEEPING YOUR CODE (NOT USED FOR GOOGLE AUTH)
-      if (token) {
-        localStorage.setItem("token", token);
-      }
-
+      // ✅ No localStorage token needed anymore
       setUser(user);
 
       return { success: true, user };
     } catch (err) {
-      const message = err.response?.data?.message || "Login failed";
+      const message =
+        err.response?.data?.message || "Login failed";
+
       setError(message);
-      return { success: false, error: message };
+
+      return {
+        success: false,
+        error: message,
+      };
     }
   };
 
-  // ✅ Register (UNCHANGED)
+  // ✅ Register
   const register = async (name, email, password) => {
     try {
       setError(null);
@@ -208,48 +215,48 @@ export const AuthProvider = ({ children }) => {
         password,
       });
 
-      const { token, user } = res.data;
-
-      if (token) {
-        localStorage.setItem("token", token);
-      }
+      const { user } = res.data;
 
       setUser(user);
+
       return { success: true, user };
     } catch (err) {
-      const message = err.response?.data?.message || "Registration failed";
+      const message =
+        err.response?.data?.message ||
+        "Registration failed";
+
       setError(message);
-      return { success: false, error: message };
+
+      return {
+        success: false,
+        error: message,
+      };
     }
   };
 
-  // ✅ Logout (FIXED FOR COOKIE SUPPORT)
+  // ✅ Logout
   const logout = async () => {
     try {
-      await api.post("/api/auth/logout", {}, {
-        withCredentials: true,
-      });
+      await api.post("/api/auth/logout");
     } catch (err) {
-      console.log("Logout API error:", err.message);
+      console.log("Logout error:", err.message);
     }
 
-    localStorage.removeItem("token");
     setUser(null);
+
     navigate("/login");
   };
 
-  // ✅ Get latest user data (FIXED)
+  // ✅ Refresh user data
   const getUserData = async () => {
     try {
-      const res = await api.get("/api/auth/me", {
-        withCredentials: true,
-      });
+      const res = await api.get("/api/user/data");
 
       if (res.data.success) {
         setUser(res.data.user);
       }
     } catch (err) {
-      console.error("Failed to fetch user data");
+      console.log("Failed to fetch user data");
     }
   };
 
