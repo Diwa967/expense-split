@@ -397,9 +397,10 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, currentUserId }) => {
                 setReceipts((prev) => [...prev, ...files]);
                 message.success("Receipt uploaded successfully!");
 
-                // ✅ AUTO READ AMOUNT FROM FIRST RECEIPT
+                // ✅ AUTO EXTRACT AMOUNT FROM FIRST RECEIPT
                 if (files.length > 0) {
-                  const loadingmessage = message.loading("Extracting total amount from receipt...");
+                  const loadingKey = message.loading("Extracting total amount from receipt...", 0);
+                  // `0` keeps the message until manually closed/updated
 
                   try {
                     const response = await fetch(files[0].url);
@@ -409,7 +410,6 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, currentUserId }) => {
                     formDataImage.append("image", blob, files[0].name || "receipt.jpg");
 
                     const scanRes = await api.post("/api/gemini/scan-receipt", formDataImage);
-
                     const data = scanRes.data;
 
                     if (data.success && data.amount) {
@@ -417,24 +417,26 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, currentUserId }) => {
                         ...prev,
                         amount: data.amount,
                       }));
-                      message.update(loadingmessage, {
-                        render: `Detected amount: $${data.amount}`,
+
+                      // Success: Show detected amount
+                      message.update(loadingKey, {
+                        render: `✅ Amount detected: $${data.amount}`,
                         type: "success",
                         isLoading: false,
-                        autoClose: 3000,
+                        autoClose: 2500,
                       });
                     } else {
-                      message.update(loadingmessage, {
-                        render: "Could not detect amount",
+                      message.update(loadingKey, {
+                        render: "Could not detect amount from receipt",
                         type: "warning",
                         isLoading: false,
                         autoClose: 3000,
                       });
                     }
                   } catch (err) {
-                    console.error(err);
-                    message.update(loadingmessage, {
-                      render: "Failed to scan receipt",
+                    console.error("Receipt scanning error:", err);
+                    message.update(loadingKey, {
+                      render: "Failed to scan receipt. Please enter amount manually.",
                       type: "error",
                       isLoading: false,
                       autoClose: 4000,
