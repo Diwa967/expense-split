@@ -13,28 +13,111 @@ const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
 
+// export const register = async (req, res) => {
+//   const { name, email, password } = req.body;
+
+//   try {
+//     if (!name || !email || !password) {
+//       return res.status(400).json({ message: "All fields are required" });
+//     }
+
+//     const exists = await User.findOne({ email });
+//     if (exists) {
+//       return res.status(400).json({ message: "User already exists" });
+//     }
+
+//     const hashed = await bcrypt.hash(password, 10);
+
+//     // Generate OTP
+//     const otp = String(Math.floor(100000 + Math.random() * 900000));
+
+//     console.log("REGISTER OTP:", otp);
+//     console.log("REGISTER EMAIL:", email);
+
+//     // Create user
+//     const user = await User.create({
+//       name,
+//       email,
+//       password: hashed,
+//       verifyOtp: otp,
+//       verifyOtpExpireAt: Date.now() + 15 * 60 * 1000,
+//     });
+
+//     // Send verification email
+//     try {
+//       const info = await transporter.sendMail({
+//         from: process.env.SENDER_EMAIL,
+//         to: email,
+//         subject: "Verify Your Email",
+//         text: `Your verification OTP is ${otp}`,
+//       });
+
+//       console.log("Verify email sent:", info.response);
+//     } catch (mailError) {
+//       console.error("Verify email error:", mailError);
+//     }
+
+//     res.json({
+//       message: "Registered successfully. Please verify your email.",
+//       email,
+//     });
+//   } catch (error) {
+//     console.error("Register error:", error);
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+
+
 export const register = async (req, res) => {
   const { name, email, password } = req.body;
 
+  console.log("=== REGISTER START ===");
+
   try {
+    console.log("Incoming data:", {
+      name,
+      email,
+      hasPassword: !!password,
+    });
+
+    // Check env variables
+    console.log("ENV CHECK:", {
+      SMTP_USER: process.env.SMTP_USER,
+      SMTP_PASS_EXISTS: !!process.env.SMTP_PASS,
+      SENDER_EMAIL: process.env.SENDER_EMAIL,
+      CLIENT_URL: process.env.CLIENT_URL,
+    });
+
     if (!name || !email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+      console.log("Missing fields");
+      return res.status(400).json({
+        message: "All fields are required",
+      });
     }
 
+    console.log("Checking existing user...");
+
     const exists = await User.findOne({ email });
+
     if (exists) {
-      return res.status(400).json({ message: "User already exists" });
+      console.log("User already exists");
+      return res.status(400).json({
+        message: "User already exists",
+      });
     }
+
+    console.log("Hashing password...");
 
     const hashed = await bcrypt.hash(password, 10);
 
     // Generate OTP
     const otp = String(Math.floor(100000 + Math.random() * 900000));
 
-    console.log("REGISTER OTP:", otp);
-    console.log("REGISTER EMAIL:", email);
+    console.log("Generated OTP:", otp);
 
-    // Create user
+    console.log("Creating user in DB...");
+
     const user = await User.create({
       name,
       email,
@@ -43,29 +126,60 @@ export const register = async (req, res) => {
       verifyOtpExpireAt: Date.now() + 15 * 60 * 1000,
     });
 
-    // Send verification email
+    console.log("User created successfully:", user._id);
+
+    // SEND EMAIL
     try {
+      console.log("Attempting to send verification email...");
+
       const info = await transporter.sendMail({
-        from: process.env.SENDER_EMAIL,
+        from: `"Expense Split" <${process.env.SENDER_EMAIL}>`,
         to: email,
         subject: "Verify Your Email",
         text: `Your verification OTP is ${otp}`,
       });
 
-      console.log("Verify email sent:", info.response);
+      console.log("EMAIL SENT SUCCESSFULLY");
+      console.log("Mail response:", info.response);
+      console.log("Message ID:", info.messageId);
     } catch (mailError) {
-      console.error("Verify email error:", mailError);
+      console.error("=== EMAIL ERROR ===");
+      console.error(mailError);
+
+      if (mailError.response) {
+        console.error("SMTP Response:", mailError.response);
+      }
+
+      if (mailError.code) {
+        console.error("Error Code:", mailError.code);
+      }
+
+      if (mailError.command) {
+        console.error("SMTP Command:", mailError.command);
+      }
     }
 
+    console.log("Sending success response to frontend...");
+
     res.json({
+      success: true,
       message: "Registered successfully. Please verify your email.",
       email,
     });
+
+    console.log("=== REGISTER END SUCCESS ===");
   } catch (error) {
-    console.error("Register error:", error);
-    res.status(500).json({ message: error.message });
+    console.error("=== REGISTER MAIN ERROR ===");
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
+
+
 
 
 export const login = async (req, res) => {
