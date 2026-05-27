@@ -610,3 +610,18 @@ export const createAdmin = async (req, res) => {
         });
     }
 };
+
+
+export const bulkDeleteInactiveUsers = async (req, res) => {
+    try {
+        const result = await User.deleteMany({ isVerified: false });
+
+        res.json({
+            success: true,
+            message: `Successfully deleted ${result.deletedCount} inactive users.`,
+            deletedCount: result.deletedCount
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
