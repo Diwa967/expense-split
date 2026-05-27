@@ -426,7 +426,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, currentUserId }) => {
 
                       // ✅ Update loading to success
                       message.success({
-                        content: `✅ Amount detected: $${data.amount}`,
+                        content: ` Amount detected: $${data.amount}`,
                         key,
                         duration: 2.5,
                       });
