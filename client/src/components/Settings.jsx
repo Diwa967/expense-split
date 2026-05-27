@@ -286,12 +286,13 @@ const Settings = () => {
                   <label className="block text-slate-300 text-sm font-medium mb-2">
                     Email
                   </label>
+
                   <input
                     type="email"
                     name="email"
                     value={profileData.email}
-                    onChange={handleProfileChange}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    readOnly
+                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-slate-400 cursor-not-allowed focus:outline-none"
                     placeholder="Enter your email"
                   />
                 </div>
