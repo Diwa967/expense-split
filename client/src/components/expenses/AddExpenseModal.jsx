@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { IoMdClose, IoMdSearch } from "react-icons/io";
-import { toast } from "react-toastify";
 import { generateUploadButton } from "@uploadthing/react";
 import api, { backendUrl } from "../../api/api";
+import { message } from 'antd';
 
 // SAME STYLE AS PROFILE UPLOAD - Using Button, not Dropzone
 const UploadButton = generateUploadButton({
@@ -60,7 +60,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, currentUserId }) => {
         }
       }
     } catch (error) {
-      toast.error("Failed to load groups");
+      message.error("Failed to load groups");
     } finally {
       setLoadingGroups(false);
     }
@@ -83,7 +83,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, currentUserId }) => {
         }));
       }
     } catch (error) {
-      toast.error("Failed to load members");
+      message.error("Failed to load members");
     } finally {
       setLoadingMembers(false);
     }
@@ -126,10 +126,10 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, currentUserId }) => {
     e.preventDefault();
 
     if (!formData.title.trim() || !formData.amount) {
-      return toast.warning("Title and amount are required");
+      return message.warning("Title and amount are required");
     }
     if (selectedUsers.length === 0) {
-      return toast.warning("Please select at least one participant");
+      return message.warning("Please select at least one participant");
     }
 
     setSubmitting(true);
@@ -149,13 +149,13 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, currentUserId }) => {
       const res = await api.post("/api/auth/expenses/addExpense", expenseData);
 
       if (res.data.success) {
-        toast.success("Expense added successfully!");
+        message.success("Expense added successfully!");
         onAdd(res.data.expense);
         setReceipts([]);
         onClose();
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to add expense");
+      message.error(error.response?.data?.message || "Failed to add expense");
     } finally {
       setSubmitting(false);
     }
@@ -395,39 +395,51 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, currentUserId }) => {
                 }));
 
                 setReceipts((prev) => [...prev, ...files]);
-                toast.success("Receipt uploaded!");
+                message.success("Receipt uploaded successfully!");
 
                 // ✅ AUTO READ AMOUNT FROM FIRST RECEIPT
-                try {
-                  const response = await fetch(files[0].url);
-                  const blob = await response.blob();
+                if (files.length > 0) {
+                  const loadingmessage = message.loading("Extracting total amount from receipt...");
 
-                  const formDataImage = new FormData();
-                  formDataImage.append("image", blob, "receipt.jpg");
+                  try {
+                    const response = await fetch(files[0].url);
+                    const blob = await response.blob();
 
-                  const scanRes = await fetch(
-                    "https://expense-split-nlrm.onrender.com/api/gemini/scan-receipt",
-                    {
-                      method: "POST",
-                      body: formDataImage,
+                    const formDataImage = new FormData();
+                    formDataImage.append("image", blob, files[0].name || "receipt.jpg");
+
+                    const scanRes = await api.post("/api/gemini/scan-receipt", formDataImage);
+
+                    const data = scanRes.data;
+
+                    if (data.success && data.amount) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        amount: data.amount,
+                      }));
+                      message.update(loadingmessage, {
+                        render: `Detected amount: $${data.amount}`,
+                        type: "success",
+                        isLoading: false,
+                        autoClose: 3000,
+                      });
+                    } else {
+                      message.update(loadingmessage, {
+                        render: "Could not detect amount",
+                        type: "warning",
+                        isLoading: false,
+                        autoClose: 3000,
+                      });
                     }
-                  );
-
-                  const data = await scanRes.json();
-
-                  if (data.success && data.amount) {
-                    setFormData((prev) => ({
-                      ...prev,
-                      amount: data.amount,
-                    }));
-
-                    toast.success(`Detected amount: ${data.amount}`);
-                  } else {
-                    toast.warning("Could not detect amount");
+                  } catch (err) {
+                    console.error(err);
+                    message.update(loadingmessage, {
+                      render: "Failed to scan receipt",
+                      type: "error",
+                      isLoading: false,
+                      autoClose: 4000,
+                    });
                   }
-                } catch (err) {
-                  console.error(err);
-                  toast.error("Failed to scan receipt");
                 }
               }}
             />
