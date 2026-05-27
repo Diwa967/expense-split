@@ -397,10 +397,16 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, currentUserId }) => {
                 setReceipts((prev) => [...prev, ...files]);
                 message.success("Receipt uploaded successfully!");
 
-                // ✅ AUTO EXTRACT AMOUNT FROM FIRST RECEIPT
+                // ✅ AUTO EXTRACT AMOUNT
                 if (files.length > 0) {
-                  const loadingKey = message.loading("Extracting total amount from receipt...", 0);
-                  // `0` keeps the message until manually closed/updated
+                  const key = `scan_${Date.now()}`; // Unique key
+
+                  // Show loading message
+                  message.loading({
+                    content: "Extracting total amount from receipt...",
+                    key,
+                    duration: 0, // Keep until updated
+                  });
 
                   try {
                     const response = await fetch(files[0].url);
@@ -418,28 +424,25 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, currentUserId }) => {
                         amount: data.amount,
                       }));
 
-                      // Success: Show detected amount
-                      message.update(loadingKey, {
-                        render: `✅ Amount detected: $${data.amount}`,
-                        type: "success",
-                        isLoading: false,
-                        autoClose: 2500,
+                      // ✅ Update loading to success
+                      message.success({
+                        content: `✅ Amount detected: $${data.amount}`,
+                        key,
+                        duration: 2.5,
                       });
                     } else {
-                      message.update(loadingKey, {
-                        render: "Could not detect amount from receipt",
-                        type: "warning",
-                        isLoading: false,
-                        autoClose: 3000,
+                      message.warning({
+                        content: "Could not detect amount from receipt",
+                        key,
+                        duration: 3,
                       });
                     }
                   } catch (err) {
                     console.error("Receipt scanning error:", err);
-                    message.update(loadingKey, {
-                      render: "Failed to scan receipt. Please enter amount manually.",
-                      type: "error",
-                      isLoading: false,
-                      autoClose: 4000,
+                    message.error({
+                      content: "Failed to scan receipt. Please enter amount manually.",
+                      key,
+                      duration: 4,
                     });
                   }
                 }
