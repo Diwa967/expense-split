@@ -269,11 +269,10 @@ const UserTable = () => {
 
             <button
               onClick={() => openBanModal(record)}
-              className={`p-1.5 rounded transition-colors ${
-                isBanned
+              className={`p-1.5 rounded transition-colors ${isBanned
                   ? "text-emerald-400 hover:bg-emerald-500/10"
                   : "text-red-400 hover:bg-red-500/10"
-              }`}
+                }`}
               title={isBanned ? "Unban User" : "Ban User"}
             >
               {isBanned ? <FaCheck className="text-xs" /> : <FaBan className="text-xs" />}
@@ -388,13 +387,12 @@ const UserTable = () => {
 
               <div>
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                    selectedUser.isBanned
+                  className={`px-3 py-1 rounded-full text-xs font-semibold border ${selectedUser.isBanned
                       ? "bg-red-100 text-red-600 border-red-200"
                       : selectedUser.isVerified
                         ? "bg-emerald-100 text-emerald-600 border-emerald-200"
                         : "bg-slate-100 text-slate-600 border-slate-200"
-                  }`}
+                    }`}
                 >
                   {selectedUser.isBanned ? "BANNED" : selectedUser.isVerified ? "ACTIVE" : "INACTIVE"}
                 </span>

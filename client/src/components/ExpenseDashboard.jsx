@@ -10,7 +10,7 @@ import ChartsSection from './dashboard/ChartsSection';
 import GroupSection from "./groups/GroupSection";
 import CreateGroupModal from "./groups/CreateGroupModal";
 import GroupDetailModal from "./dashboard/GroupDetailModal";
-import { toast } from "react-toastify";
+import { message } from "antd";
 import { AuthContext } from "../context/AuthContext";
 
 const ExpenseDashboard = () => {
@@ -197,9 +197,9 @@ const ExpenseDashboard = () => {
 
   // Create or Update Group — refetch stats after mutation
   const handleCreateGroup = async () => {
-    if (!groupName.trim()) return alert("Please enter a group name");
+    if (!groupName.trim()) return message.error("Please enter a group name");
     if (selectedMembers.length === 0)
-      return alert("Please select at least one member");
+      return message.error("Please select at least one member");
 
     setLoading(true);
     try {
@@ -219,18 +219,18 @@ const ExpenseDashboard = () => {
       if (response.data?.success) {
         await fetchGroups();
         await fetchDashboardStats(); // refresh stats after group change
-        alert(
+        message.success(
           isEditMode
             ? "Group updated successfully!"
             : "Group created successfully!",
         );
         handleCloseCreateModal();
       } else {
-        alert(response.data?.message || "Failed to save group");
+        message.error(response.data?.message || "Failed to save group");
       }
     } catch (error) {
       console.error("Group save error:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Failed to save group");
+      message.error(error.response?.data?.message || "Failed to save group");
     } finally {
       setLoading(false);
     }

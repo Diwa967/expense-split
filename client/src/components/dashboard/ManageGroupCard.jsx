@@ -27,14 +27,14 @@ const ManageGroupCard = ({ group, onGroupDeleted, onEditGroup }) => {
     try {
       const response = await api.delete(`/api/auth/groups/${group.id}`);
       if (response.data.success) {
-        alert("Group deleted successfully");
+        message.success("Group deleted successfully");
         onGroupDeleted?.(group.id);
       } else {
-        alert(response.data.message || "Delete failed");
+        message.error(response.data.message || "Delete failed");
       }
     } catch (error) {
       console.error("Delete error:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Failed to delete group");
+      message.error(error.response?.data?.message || "Failed to delete group");
     } finally {
       setIsDeleting(false);
       setOpenMenu(false);
